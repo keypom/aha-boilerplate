@@ -7,6 +7,7 @@ use crate::*;
 #[serde(crate = "near_sdk::serde")]
 pub struct KeypomArgs {
     pub account_id_field: Option<String>,
+    pub funder_id_field: Option<String>,
     pub drop_id_field: Option<String>,
     pub key_id_field: Option<String>
 }
@@ -14,10 +15,10 @@ pub struct KeypomArgs {
 #[near_bindgen]
 impl Contract {
     #[payable]
-    pub fn create_series(
+    pub fn create_raffle(
         &mut self,
-        mint_id: Option<u64>,
-        metadata: TokenMetadata,
+        raffle_id: u64,
+        raffle_metadata: RaffleMetadata,
         royalty: Option<HashMap<AccountId, u32>>,
     ) {
         //measure the initial storage being used on the contract
@@ -25,40 +26,36 @@ impl Contract {
 
         let caller = env::predecessor_account_id();
 
-        let series_id: u64 = self.series_by_id.len() + 1;
-        let mut final_mint_id = series_id;
-        if mint_id.is_some() {
-            final_mint_id = mint_id.unwrap();
-        }
-
         require!(
-            self.series_id_by_mint_id
-                .insert(&final_mint_id, &series_id)
+            self.raffle_by_id
+                .get(&raffle_id)
                 .is_none(),
             &format!(
-                "mint_id {} already exists and points to {}",
-                &final_mint_id, &series_id
+                "raffle with ID {} already exists",
+                &raffle_id
             )
         );
 
         require!(
-            self.series_by_id
+            self.raffle_by_id
                 .insert(
-                    &series_id,
-                    &Series {
-                        mint_id: final_mint_id,
-                        metadata,
+                    &raffle_id,
+                    &Raffle {
+                        metadata: raffle_metadata,
                         //we add an optional parameter for perpetual royalties
                         royalty,
-                        tokens: UnorderedSet::new(StorageKey::SeriesByIdInner {
+                        tickets: UnorderedSet::new(StorageKey::RaffleTickets {
                             // We get a new unique prefix for the collection
-                            account_id_hash: hash_account_id(&format!("{}{}", series_id, caller)),
+                            raffle_id_hash: hash_account_id(&format!("{}{}", raffle_id, caller)),
                         }),
                         owner_id: caller
                     }
                 )
                 .is_none(),
-            "collection ID already exists"
+            &format!(
+                "raffle with ID {} already exists",
+                &raffle_id
+            )
         );
 
         //calculate the required storage which was the used - initial
@@ -69,9 +66,10 @@ impl Contract {
     }
 
     #[payable]
-    pub fn nft_mint(&mut self, mint_id: U64, receiver_id: AccountId, keypom_args: KeypomArgs) {
+    pub fn mint_ticket(&mut self, raffle_id: U64, receiver_id: AccountId, ticket_amount: u64, drop_id: String, funder_id: AccountId, keypom_args: KeypomArgs) {
         // Ensure the injected keypom args are not malicious
-        require!(keypom_args.drop_id_field.unwrap() == "mint_id".to_string(), "malicious call. Injected keypom args don't match");
+        require!(keypom_args.funder_id_field.unwrap() == "funder_id".to_string(), "malicious call. Injected keypom args don't match");
+        require!(keypom_args.drop_id_field.unwrap() == "drop_id".to_string(), "malicious call. Injected keypom args don't match");
         require!(keypom_args.account_id_field.unwrap() == "receiver_id".to_string(), "malicious call. Injected keypom args don't match");
 
         //measure the initial storage being used on the contract
@@ -83,18 +81,44 @@ impl Contract {
             "Not approved minter"
         );
 
-        let series_id = self
-            .series_id_by_mint_id
-            .get(&mint_id.0)
-            .expect("No mint_id record found");
-        let mut series = self.series_by_id.get(&series_id).expect("Not a series");
-        let cur_len = series.tokens.len();
+        let mut raffle = self.raffle_by_id.get(&raffle_id.0).expect("Not a raffle");
+        require!(raffle.drop_id.unwrap_or(drop_id) == drop_id, "drop_id mismatch");
+        require!(raffle.funder_id.unwrap_or(funder_id) == funder_id, "funder_id mismatch");
+
+        let cur_len = raffle.tickets.len() - 1 + ticket_amount;
         // Ensure we haven't overflowed on the number of copies minted
-        if let Some(copies) = series.metadata.copies {
+        if let Some(max) = raffle.metadata.max_tickets {
             require!(
-                cur_len < copies,
-                "cannot mint anymore NFTs for the given series. Limit reached"
+                cur_len < max,
+                "cannot mint anymore tickets for the given raffle. Limit reached"
             );
+        }
+
+        for _ in 0..ticket_amount {
+            let ticket_id = raffle.tickets.len();
+
+            raffle.tickets.insert(&ticket_id);
+            self.ticket_id_per_owner.insert(&receiver_id, &ticket_id);
+
+            // Construct the mint log as per the events standard.
+            let nft_mint_log: EventLog = EventLog {
+                // Standard name ("nep171").
+                standard: NFT_STANDARD_NAME.to_string(),
+                // Version of the standard ("nft-1.0.0").
+                version: NFT_METADATA_SPEC.to_string(),
+                // The data related with the event stored in a vector.
+                event: EventLogVariant::NftMint(vec![NftMintLog {
+                    // Owner of the token.
+                    owner_id: receiver_id.to_string(),
+                    // Vector of token IDs that were minted.
+                    token_ids: vec![ticket_id.to_string()],
+                    // An optional memo to include.
+                    memo: None,
+                }]),
+            };
+
+            // Log the serialized json.
+            env::log_str(&nft_mint_log.to_string());
         }
 
         let token_id = format!("{}:{}", series_id, cur_len + 1);

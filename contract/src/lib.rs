@@ -15,36 +15,37 @@ pub use crate::metadata::*;
 pub use crate::nft_core::*;
 pub use crate::owner::*;
 pub use crate::royalty::*;
-pub use crate::series::*;
+pub use crate::raffle::*;
 
 mod approval;
-mod enumeration;
 mod events;
 mod internal;
 mod metadata;
 mod nft_core;
 mod owner;
 mod royalty;
-mod series;
+mod raffle;
 
 /// This spec can be treated like a version of the standard.
 pub const NFT_METADATA_SPEC: &str = "nft-1.0.0";
 /// This is the name of the NFT standard we're using
 pub const NFT_STANDARD_NAME: &str = "nep171";
 
-// Represents the series type. All tokens will derive this data.
+// Represents the raffle type. All tokens will derive this data.
 #[derive(BorshDeserialize, BorshSerialize)]
-pub struct Series {
-    // Metadata including title, num copies etc.. that all tokens will derive from
-    metadata: TokenMetadata,
+pub struct Raffle {
+    // If specified, the drop funder coming from Keypom MUST be equal to this value
+    funder_id: Option<AccountId>,
+    // If specified, the drop ID coming from Keypom MUST be equal to this value
+    drop_id: Option<String>,
+    // Metadata including title, num copies, etc., that all tokens will derive from
+    metadata: RaffleMetadata,
     // Royalty used for all tokens in the collection
     royalty: Option<HashMap<AccountId, u32>>,
-    // Set of tokens in the collection
-    tokens: UnorderedSet<TokenId>,
-    // Owner of the collection (they can update collection ID)
-    owner_id: AccountId,
-
-    mint_id: u64,
+    // Set of tickets in the collection
+    tickets: UnorderedSet<TicketId>,
+    // Owner of the raffle
+    owner_id: AccountId
 }
 
 pub type CollectionId = u64;
@@ -52,27 +53,20 @@ pub type CollectionId = u64;
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
-    //contract owner
+    // Contract owner
     pub owner_id: AccountId,
-
-    //approved minters
+    // Approved minters
     pub approved_minters: LookupSet<AccountId>,
-
-    //approved users that can create series
+    // Approved users that can create raffles
     pub approved_creators: LookupSet<AccountId>,
+    // Map the collection ID (stored in Token obj) to the collection data
+    pub raffle_by_id: UnorderedMap<CollectionId, Raffle>,
+    // Keeps track of the token struct for a given token ID
+    pub ticket_by_id: UnorderedMap<TicketId, Ticket>,
 
-    //Map the collection ID (stored in Token obj) to the collection data
-    pub series_by_id: UnorderedMap<CollectionId, Series>,
-
-    pub series_id_by_mint_id: LookupMap<u64, u64>,
-
-    //keeps track of the token struct for a given token ID
-    pub tokens_by_id: UnorderedMap<TokenId, Token>,
-
-    //keeps track of all the token IDs for a given account
-    pub tokens_per_owner: LookupMap<AccountId, UnorderedSet<TokenId>>,
-
-    //keeps track of the metadata for the contract
+    // Keeps track of all the token IDs for a given account
+    pub tickets_per_owner: LookupMap<AccountId, UnorderedSet<TicketId>>,
+    // Keeps track of the metadata for the contract
     pub metadata: LazyOption<NFTContractMetadata>,
 }
 
@@ -81,25 +75,22 @@ pub struct Contract {
 pub enum StorageKey {
     ApprovedMinters,
     ApprovedCreators,
-    SeriesById,
-    SeriesIdByMintId,
-    SeriesByIdInner { account_id_hash: CryptoHash },
-    TokensPerOwner,
-    TokenPerOwnerInner { account_id_hash: CryptoHash },
-    TokensById,
-    NFTContractMetadata,
+    RaffleById,
+    RaffleByTicketId,
+    TicketById,
+    RaffleTickets { raffle_id_hash: CryptoHash },
+    TicketsPerOwner,
+    TicketsPerOwnerInner { account_id_hash: CryptoHash },
+    Metadata,
 }
 
 #[near_bindgen]
 impl Contract {
-    /*
-        initialization function (can only be called once).
-        this initializes the contract with default metadata so the
-        user doesn't have to manually type metadata.
-    */
+    // Initialization function (can only be called once).
+    // This initializes the contract with default metadata so the
+    // user doesn't have to manually type metadata.
     #[init]
     pub fn new_default_meta(owner_id: AccountId) -> Self {
-        //calls the other function "new: with some default metadata and the owner_id passed in
         Self::new(
             owner_id,
             NFTContractMetadata {
@@ -114,14 +105,11 @@ impl Contract {
         )
     }
 
-    /*
-        initialization function (can only be called once).
-        this initializes the contract with metadata that was passed in and
-        the owner_id.
-    */
+    // Initialization function (can only be called once).
+    // This initializes the contract with metadata that was passed in and
+    // the owner_id.
     #[init]
     pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) -> Self {
-        //create a variable of type Self with all the fields initialized.
         let mut approved_minters =
             LookupSet::new(StorageKey::ApprovedMinters.try_to_vec().unwrap());
         approved_minters.insert(&owner_id);
@@ -131,24 +119,22 @@ impl Contract {
         approved_creators.insert(&owner_id);
 
         let this = Self {
+            owner_id,
             approved_minters,
             approved_creators,
-            series_by_id: UnorderedMap::new(StorageKey::SeriesById.try_to_vec().unwrap()),
-            series_id_by_mint_id: LookupMap::new(
-                StorageKey::SeriesIdByMintId.try_to_vec().unwrap(),
+            raffle_by_id: UnorderedMap::new(StorageKey::RaffleById.try_to_vec().unwrap()),
+            ticket_by_id: UnorderedMap::new(
+                StorageKey::TicketById.try_to_vec().unwrap(),
             ),
-            //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
-            tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
-            tokens_by_id: UnorderedMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
-            //set the &owner_id field equal to the passed in owner_id.
-            owner_id,
+            tickets_per_owner: LookupMap::new(
+                StorageKey::TicketsPerOwner.try_to_vec().unwrap(),
+            ),
             metadata: LazyOption::new(
-                StorageKey::NFTContractMetadata.try_to_vec().unwrap(),
+                StorageKey::Metadata.try_to_vec().unwrap(),
                 Some(&metadata),
             ),
         };
 
-        //return the Contract object
         this
     }
 }
