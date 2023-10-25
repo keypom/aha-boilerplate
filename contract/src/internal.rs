@@ -95,7 +95,7 @@ impl Contract {
     }
 
     // Add a set of tickets to the set of tickets an owner has.
-    pub(crate) fn internal_add_ticket_to_owner(
+    pub(crate) fn internal_add_tickets_to_owner(
         &mut self,
         account_id: &AccountId,
         ticket_id: &Vec<TicketId>,
@@ -123,7 +123,7 @@ impl Contract {
     }
 
     // Remove a ticket from an owner (internal method and can't be called directly via CLI).
-    pub(crate) fn internal_remove_ticket_from_owner(
+    pub(crate) fn internal_remove_tickets_from_owner(
         &mut self,
         account_id: &AccountId,
         ticket_id: &Vec<TicketId>,
@@ -194,9 +194,9 @@ impl Contract {
         );
 
         // Remove the ticket from its current owner's set.
-        self.internal_remove_ticket_from_owner(&ticket.owner_id, &vec![ticket_id]);
+        self.internal_remove_tickets_from_owner(&ticket.owner_id, &vec![ticket_id]);
         // Add the ticket to the receiver_id's set.
-        self.internal_add_ticket_to_owner(receiver_id, &vec![ticket_id]);
+        self.internal_add_tickets_to_owner(receiver_id, &vec![ticket_id]);
 
         // Create a new ticket struct.
         let new_ticket = Ticket {

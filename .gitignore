@@ -3,7 +3,7 @@
 # Ignore node_modules in any subdirectory
 **/node_modules/
 
-**/target/
+contract/target/
 
 # Ignore package-lock.json and pnpm-lock.yaml
 package-lock.json

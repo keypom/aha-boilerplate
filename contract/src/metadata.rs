@@ -50,10 +50,8 @@ pub struct Ticket {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonTicket {
-    // Series that the token belongs to
-    pub ticket_id: u64,
-    //token ID
-    pub token_id: TicketId,
+    pub ticket_id: U64,
+    pub raffle_id: U64,
     //owner of the token
     pub owner_id: AccountId,
     //token metadata
