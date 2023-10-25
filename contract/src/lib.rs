@@ -1,88 +1,154 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{UnorderedMap, LookupSet, LookupMap};
-use near_sdk::json_types::U128;
-use near_sdk::serde::{Serialize, Deserialize};
-use near_sdk::{near_bindgen, BorshStorageKey, PanicOnDefault, AccountId, require, env, Balance, PublicKey};
+use near_sdk::collections::{LazyOption, LookupMap, LookupSet, UnorderedMap, UnorderedSet};
+use near_sdk::json_types::{Base64VecU8, U128};
+use near_sdk::serde::{Deserialize, Serialize};
+use near_sdk::{
+    env, near_bindgen, require, AccountId, Balance, BorshStorageKey, CryptoHash, PanicOnDefault,
+    Promise, PromiseOrValue,
+};
+use std::collections::HashMap;
 
-mod models;
+pub use crate::approval::*;
+pub use crate::events::*;
+use crate::internal::*;
+pub use crate::metadata::*;
+pub use crate::nft_core::*;
+pub use crate::owner::*;
+pub use crate::royalty::*;
+pub use crate::series::*;
+
+mod approval;
+mod enumeration;
 mod events;
-mod fungible_tokens;
-mod factory;
-mod vendors;
+mod internal;
+mod metadata;
+mod nft_core;
+mod owner;
+mod royalty;
+mod series;
 
-use models::*;
-use fungible_tokens::*;
-use events::*;
+/// This spec can be treated like a version of the standard.
+pub const NFT_METADATA_SPEC: &str = "nft-1.0.0";
+/// This is the name of the NFT standard we're using
+pub const NFT_STANDARD_NAME: &str = "nep171";
+
+// Represents the series type. All tokens will derive this data.
+#[derive(BorshDeserialize, BorshSerialize)]
+pub struct Series {
+    // Metadata including title, num copies etc.. that all tokens will derive from
+    metadata: TokenMetadata,
+    // Royalty used for all tokens in the collection
+    royalty: Option<HashMap<AccountId, u32>>,
+    // Set of tokens in the collection
+    tokens: UnorderedSet<TokenId>,
+    // Owner of the collection (they can update collection ID)
+    owner_id: AccountId,
+
+    mint_id: u64,
+}
+
+pub type CollectionId = u64;
 
 #[near_bindgen]
-#[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
+#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
-    // ------------------------ Vendor Information ------------------------ //
-    pub data_by_vendor: UnorderedMap<AccountId, VendorInformation>,
-    pub admin_accounts: LookupSet<AccountId>,
+    //contract owner
+    pub owner_id: AccountId,
 
-    // ------------------------ Fungible Tokens ------------------------ //
-    pub balance_by_account: LookupMap<AccountId, Balance>,
-    pub total_supply: Balance,
-    pub metadata: FungibleTokenMetadata,
+    //approved minters
+    pub approved_minters: LookupSet<AccountId>,
 
-    // ------------------------ Account Factory ------------------------ //
-    pub allowed_drop_id: String,
-    pub keypom_contract: AccountId,
-    pub starting_near_balance: Balance,
-    pub starting_ncon_balance: Balance,
-    pub account_id_by_pub_key: LookupMap<PublicKey, AccountId>
+    //approved users that can create series
+    pub approved_creators: LookupSet<AccountId>,
+
+    //Map the collection ID (stored in Token obj) to the collection data
+    pub series_by_id: UnorderedMap<CollectionId, Series>,
+
+    pub series_id_by_mint_id: LookupMap<u64, u64>,
+
+    //keeps track of the token struct for a given token ID
+    pub tokens_by_id: UnorderedMap<TokenId, Token>,
+
+    //keeps track of all the token IDs for a given account
+    pub tokens_per_owner: LookupMap<AccountId, UnorderedSet<TokenId>>,
+
+    //keeps track of the metadata for the contract
+    pub metadata: LazyOption<NFTContractMetadata>,
+}
+
+/// Helper structure for keys of the persistent collections.
+#[derive(BorshSerialize, BorshStorageKey)]
+pub enum StorageKey {
+    ApprovedMinters,
+    ApprovedCreators,
+    SeriesById,
+    SeriesIdByMintId,
+    SeriesByIdInner { account_id_hash: CryptoHash },
+    TokensPerOwner,
+    TokenPerOwnerInner { account_id_hash: CryptoHash },
+    TokensById,
+    NFTContractMetadata,
 }
 
 #[near_bindgen]
 impl Contract {
-    /// Allows 
-    pub fn recover_account(&self, key: PublicKey) -> AccountId {
-        self.account_id_by_pub_key.get(&key).expect("No account found")
-    }
-
+    /*
+        initialization function (can only be called once).
+        this initializes the contract with default metadata so the
+        user doesn't have to manually type metadata.
+    */
     #[init]
-    pub fn new(
-        allowed_drop_id: String, 
-        keypom_contract: AccountId,
-        starting_near_balance: U128,
-        starting_ncon_balance: U128
-    ) -> Self {
-        Self {
-            data_by_vendor: UnorderedMap::new(StorageKeys::DataByVendor),
-            admin_accounts: LookupSet::new(StorageKeys::AdminAccounts),
-            
-            balance_by_account: LookupMap::new(StorageKeys::BalanceByAccount),
-            total_supply: 0,
-            metadata: FungibleTokenMetadata {
-                spec: "ft-1.0.0".to_string(),
-                name: "NEARCon Fungible Token".to_string(),
-                symbol: "NCON".to_string(),
-                icon: Some(DATA_IMAGE_SVG_GT_ICON.to_string()),
+    pub fn new_default_meta(owner_id: AccountId) -> Self {
+        //calls the other function "new: with some default metadata and the owner_id passed in
+        Self::new(
+            owner_id,
+            NFTContractMetadata {
+                spec: "nft-1.0.0".to_string(),
+                name: "NFT Tutorial Contract".to_string(),
+                symbol: "GOTEAM".to_string(),
+                icon: None,
+                base_uri: None,
                 reference: None,
                 reference_hash: None,
-                decimals: 24,
             },
-
-            allowed_drop_id,
-            keypom_contract,
-            starting_near_balance: starting_near_balance.into(),
-            starting_ncon_balance: starting_ncon_balance.into(),
-            account_id_by_pub_key: LookupMap::new(StorageKeys::AccountIdByPubKey)
-        }
+        )
     }
 
-    #[private]
-    pub fn add_admin(&mut self, account_ids: Vec<AccountId>) {
-        for account_id in account_ids {
-            self.admin_accounts.insert(&account_id);
-        }
-    }
+    /*
+        initialization function (can only be called once).
+        this initializes the contract with metadata that was passed in and
+        the owner_id.
+    */
+    #[init]
+    pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) -> Self {
+        //create a variable of type Self with all the fields initialized.
+        let mut approved_minters =
+            LookupSet::new(StorageKey::ApprovedMinters.try_to_vec().unwrap());
+        approved_minters.insert(&owner_id);
 
-    #[private]
-    pub fn remove_admin(&mut self, account_ids: Vec<AccountId>) {
-        for account_id in account_ids {
-            self.admin_accounts.remove(&account_id);
-        }
+        let mut approved_creators =
+            LookupSet::new(StorageKey::ApprovedCreators.try_to_vec().unwrap());
+        approved_creators.insert(&owner_id);
+
+        let this = Self {
+            approved_minters,
+            approved_creators,
+            series_by_id: UnorderedMap::new(StorageKey::SeriesById.try_to_vec().unwrap()),
+            series_id_by_mint_id: LookupMap::new(
+                StorageKey::SeriesIdByMintId.try_to_vec().unwrap(),
+            ),
+            //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
+            tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
+            tokens_by_id: UnorderedMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
+            //set the &owner_id field equal to the passed in owner_id.
+            owner_id,
+            metadata: LazyOption::new(
+                StorageKey::NFTContractMetadata.try_to_vec().unwrap(),
+                Some(&metadata),
+            ),
+        };
+
+        //return the Contract object
+        this
     }
 }
