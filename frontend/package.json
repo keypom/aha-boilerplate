@@ -1,80 +1,65 @@
 {
-    "name": "refraction-dao-registration",
-    "version": "0.1.0",
+    "name": "aha-boilerplate",
+    "version": "1.0.0",
+    "description": "AHA Boilerplate for Frontend Development",
+    "license": "MIT",
     "private": true,
-    "dependencies": {
-        "@keypom/core": "^1.0.2",
-        "@near-js/accounts": "0.1.3",
-        "@near-js/crypto": "0.0.4",
-        "@near-js/keystores-browser": "0.0.4",
-        "@near-js/transactions": "0.2.0",
-        "@near-js/types": "0.0.4",
-        "@near-js/utils": "0.0.4",
-        "@near-js/wallet-account": "0.0.6",
-        "@testing-library/jest-dom": "^5.16.5",
-        "@testing-library/react": "^13.4.0",
-        "@testing-library/user-event": "^13.5.0",
-        "@types/jest": "^27.5.2",
-        "@types/node": "^16.18.3",
-        "@types/react": "^18.0.25",
-        "@types/react-dom": "^18.0.9",
-        "classnames": "^2.3.2",
-        "flowbite": "^1.5.4",
-        "flowbite-react": "^0.3.5",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "react-hook-form": "^7.39.7",
-        "react-router-dom": "^6.4.3",
-        "react-scripts": "^5.0.1",
-        "serve": "^14.2.1",
-        "typescript": "^4.9.3",
-        "web-vitals": "^2.1.4",
-        "zustand": "^4.1.4"
-    },
     "scripts": {
-        "start": "react-app-rewired start",
-        "build": "react-app-rewired build",
-        "test": "react-app-rewired test",
-        "eject": "react-scripts eject",
-        "predeploy": "npm run build",
-        "deploy": "gh-pages -d build"
+      "start": "react-scripts start",
+      "build": "react-scripts build",
+      "test": "react-scripts test",
+      "eject": "react-scripts eject",
+      "lint": "eslint .",
+      "format": "prettier --write .",
+      "predeploy": "npm run build",
+      "deploy": "gh-pages -d build",
+      "serve": "serve -s build"
     },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ]
-    },
-    "browserslist": {
-        "production": [
-            ">0.2%",
-            "not dead",
-            "not op_mini all"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
+    "dependencies": {
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "react-scripts": "^5.0.1",
+      "react-hook-form": "^7.39.7",
+      "react-router-dom": "^6.4.3",
+      "zustand": "^4.1.4"
     },
     "devDependencies": {
-        "assert": "^2.0.0",
-        "autoprefixer": "^10.4.13",
-        "buffer": "^6.0.3",
-        "crypto-browserify": "^3.12.0",
-        "gh-pages": "^6.0.0",
-        "https-browserify": "^1.0.0",
-        "husky": "^8.0.0",
-        "os-browserify": "^0.3.0",
-        "postcss": "^8.4.19",
-        "prettier": "^2.8.0",
-        "prettier-plugin-tailwindcss": "^0.2.0",
-        "pretty-quick": "^3.1.3",
-        "process": "^0.11.10",
-        "react-app-rewired": "^2.2.1",
-        "stream-browserify": "^3.0.0",
-        "stream-http": "^3.2.0",
-        "tailwindcss": "^3.2.4",
-        "url": "^0.11.0"
+      "@testing-library/jest-dom": "^5.16.5",
+      "@testing-library/react": "^13.4.0",
+      "@testing-library/user-event": "^13.5.0",
+      "@types/jest": "^27.5.2",
+      "@types/node": "^16.18.3",
+      "@types/react": "^18.0.25",
+      "@types/react-dom": "^18.0.9",
+      "classnames": "^2.3.2",
+      "eslint": "^8.0.1",
+      "flowbite": "^1.5.4",
+      "flowbite-react": "^0.3.5",
+      "husky": "^8.0.0",
+      "jest": "^27.0.4",
+      "prettier": "^2.8.0",
+      "prettier-plugin-tailwindcss": "^0.2.0",
+      "pretty-quick": "^3.1.3",
+      "tailwindcss": "^3.2.4",
+      "gh-pages": "^6.0.0",
+      "serve": "^14.2.1"
+    },
+    "eslintConfig": {
+      "extends": [
+        "react-app",
+        "react-app/jest"
+      ]
+    },
+    "browserslist": {
+      "production": [
+        ">0.2%",
+        "not dead",
+        "not op_mini all"
+      ],
+      "development": [
+        "last 1 chrome version",
+        "last 1 firefox version",
+        "last 1 safari version"
+      ]
     }
-}
+  }

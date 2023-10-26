@@ -2,7 +2,6 @@ import React from 'react';
 import create, { StateCreator } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { succeed, fail } from '../mock-api/mock';
-import { createAccountAndClaim } from '../util/ft-create';
 
 interface FTRet {
     error: string | null;
@@ -53,12 +52,12 @@ const createAppSlice: StateCreator<
         set({ accountTakenFlag: false });
         try {
             // const res = await succeed();
-            const res = await createAccountAndClaim(
-                privateKey,
-                accountName,
-                pin,
-                network
-            );
+            await setTimeout(() => succeed(), 1000);
+            let res = {
+                error: "none",
+                account: "TEST_ACCOUNT"
+            }
+
             console.log('got res', res);
             set({ pending: false });
             if (res.error === 'Account exists') {

@@ -7,11 +7,24 @@ module.exports = {
                 hard: '4px 4px 0px rgba(0,0,0,1)',
             },
             colors: {
-                'brand-blue': '#1351B2',
-                'brand-cream': '#F5F6F0',
+                'white': '#FFFFFF', // AHA White
+                'gray': '#636466',  // AHA Gray
+                'black': '#000000', // AHA Black
+                'deep-red': '#A51431',  // AHA Deep Red (Accent)
+                // Define other colors you may need
+                // ...
+            },
+            textColor: {
+                'default': '#000000',    // Black as default text color
+                'accent': '#A51431',      // AHA Deep Red as accent text color
+                // Define other text colors you may need
+                // ...
             },
             fontFamily: {
-                dela: ['Dela Gothic One', 'cursive'],
+                'lub-dub': ['Lub Dub', 'sans-serif'],  // AHA's custom font
+                'georgia': ['Georgia', 'serif'],       // Georgia Regular
+                // Add other font styles from AHA
+                // ...
             },
         },
     },

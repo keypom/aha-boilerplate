@@ -1,0 +1,18 @@
+.nav-link {
+    position: relative;
+    text-decoration: none;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-bottom: 2px solid transparent;
+    transition: border-color 300ms;
+}
+
+.nav-link:hover::before {
+    border-color: #A51431;
+}
