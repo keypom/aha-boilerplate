@@ -11,21 +11,24 @@ function Navbar() {
         <img
           src={logo}
           alt="American Heart Association Logo"
-          className="h-10 w-auto cursor-pointer"
+          className="h-16 w-auto cursor-pointer"
         />
       </Link>
 
       {/* Navigation buttons on the right */}
-      <div className="flex space-x-4">
-        <Link to="/stats" className="text-black nav-link">
+      <div className="flex items-center space-x-8">
+        <Link to="/stats" className="text-black text-lg nav-link"> {/* Added text-lg class here */}
           Stats
         </Link>
-        <Link to="/raffle" className="text-black nav-link">
-          Raffle
-        </Link>
-        <Link to="/login" className="text-black nav-link">
-          Login
-        </Link>
+
+        <div className="space-x-14">
+          <Link to="/raffle" className="text-black text-lg nav-link"> {/* Added text-lg class here */}
+            Raffle
+          </Link>
+          <Link to="/login" className="login-button text-lg"> {/* Added text-lg class here */}
+            Login
+          </Link>
+        </div>
       </div>
     </nav>
   );

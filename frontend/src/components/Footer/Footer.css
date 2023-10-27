@@ -1,0 +1,55 @@
+/* Footer.css */
+
+/* Mobile Styles */
+@media (max-width: 640px) {
+    .footer-container {
+        flex-direction: column;
+        /* Stack elements vertically on small screens */
+    }
+
+    .footer-container a img {
+        max-width: 200px;
+        /* Limit the maximum width of the logo */
+    }
+
+    .footer-container .text-xs {
+        text-align: center;
+        /* Center-align the copyright text */
+    }
+}
+
+/* Default Styles */
+.footer {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+}
+
+/* Set opacity for the logo image */
+.footer img {
+    opacity: 0.7;
+    /* Opacity set to 80% */
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-links {
+    display: flex;
+    gap: 20px;
+}
+
+.footer-links a {
+    text-decoration: none;
+    color: #fff;
+    transition: color 0.3s;
+}
+
+.footer-links a:hover {
+    color: #ff5733;
+}

@@ -1,3 +1,4 @@
+/* Navbar.css */
 .nav-link {
     position: relative;
     text-decoration: none;
@@ -15,4 +16,27 @@
 
 .nav-link:hover::before {
     border-color: #A51431;
+    /* Dark red color on hover */
+}
+
+/* Custom hover effect for the Login button */
+.login-button {
+    text-decoration: none;
+    display: inline-block;
+    padding: 8px 20px;
+    /* Adjust the padding as needed */
+    border-radius: 30px;
+    /* Use half of the desired height to create a capsule shape */
+    background-color: rgba(165, 20, 49, 0.5);
+    /* Opaque red */
+    color: #fff;
+    /* Text color */
+    transition: background-color 0.3s;
+    /* Smooth background color transition on hover */
+}
+
+.login-button:hover {
+    background-color: #A51431;
+    /* Darker red on hover */
+    cursor: pointer;
 }
