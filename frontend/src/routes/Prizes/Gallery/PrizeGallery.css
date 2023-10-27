@@ -1,0 +1,120 @@
+/* Gallery.css */
+
+/* Gallery container */
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}
+
+/* Individual item cards */
+.prize-card {
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.prize-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Prize image */
+.prize-image {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+
+/* Prize name */
+.prize-name {
+    font-size: 1.6rem;
+    color: #333;
+    font-weight: bold;
+}
+
+/* Prize description */
+.prize-description {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+/* Prize points */
+.prize-points {
+    font-size: 1.4rem;
+    color: #A51431;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+/* Redeem button */
+.redeem-button {
+    background-color: #A51431;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.redeem-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.redeem-button:hover {
+    background-color: #8C0D26;
+}
+
+/* Out of stock message */
+.out-of-stock {
+    color: #777;
+    font-weight: bold;
+}
+
+/* Filters container */
+.filters {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 10px 20px 0 20px;
+}
+
+/* Filter text style */
+.filter {
+    cursor: pointer;
+    margin-right: 20px;
+    font-size: 1.2rem;
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+/* Filter underline animation */
+.filter::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    background-color: #A51431;
+    bottom: -2px;
+    left: 0;
+    transition: width 0.3s;
+}
+
+/* Hover state for filters */
+.filter:hover {
+    color: #A51431;
+}
+
+/* Hover state for filter underline */
+.filter:hover::after {
+    width: 100%;
+}

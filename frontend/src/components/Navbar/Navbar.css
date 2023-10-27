@@ -27,7 +27,7 @@
     /* Adjust the padding as needed */
     border-radius: 30px;
     /* Use half of the desired height to create a capsule shape */
-    background-color: rgba(165, 20, 49, 0.5);
+    background-color: rgba(207, 24, 24, 0.638);
     /* Opaque red */
     color: #fff;
     /* Text color */
@@ -36,7 +36,7 @@
 }
 
 .login-button:hover {
-    background-color: #A51431;
+    background-color: #c51818;
     /* Darker red on hover */
     cursor: pointer;
 }

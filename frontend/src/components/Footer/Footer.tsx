@@ -1,8 +1,8 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTwitter, faTelegram, faGithub } from '@fortawesome/free-brands-svg-icons';
-import logo from '../../ext-assets/powered_by_keypom4x.png';
 import './Footer.css';
+const assetUrl = process.env.PUBLIC_URL + '/ext-assets/powered_by_keypom4x.png';
 
 function Footer() {
   return (
@@ -11,7 +11,7 @@ function Footer() {
         <div className="flex flex-col items-center md:items-start space-y-4 md:space-y-4">
           <a href="https://keypom.xyz" target="_blank" rel="noopener noreferrer">
             <img
-              src={logo}
+              src={assetUrl}
               alt="keypom-logo"
               className="w-full md:w-64 h-auto cursor-pointer"
             />
