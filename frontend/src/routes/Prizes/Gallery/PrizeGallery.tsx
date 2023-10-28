@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import PrizeCard from '../Cards/PrizeCard'; // Import the PrizeCard component
+import PrizeCard from '../Cards/PrizeCard';
 import { Prize } from '../PrizeHome';
-import './PrizeGallery.css'; // Import the Gallery.css file
+import './PrizeGallery.css';
 
 interface PrizeGalleryProps {
   prizes: Prize[];
@@ -10,20 +10,27 @@ interface PrizeGalleryProps {
 
 const PrizeGallery: React.FC<PrizeGalleryProps> = ({ prizes, addToCart }) => {
   const [sortOption, setSortOption] = useState('none');
+  const [searchInput, setSearchInput] = useState('');
 
   const handleSort = (option: string) => {
-    // Sort the prizes based on the selected option
+    const sortedPrizes = [...prizes]; // Create a copy to avoid mutating the original array
+
     if (option === 'price-low-high') {
-      prizes.sort((a, b) => a.pointCost - b.pointCost);
+      sortedPrizes.sort((a, b) => a.pointCost - b.pointCost);
     } else if (option === 'price-high-low') {
-      prizes.sort((a, b) => b.pointCost - a.pointCost);
+      sortedPrizes.sort((a, b) => b.pointCost - a.pointCost);
     } else if (option === 'newest') {
-      prizes.sort((a, b) => b.id - a.id);
+      sortedPrizes.sort((a, b) => b.id - a.id);
     } else if (option === 'oldest') {
-      prizes.sort((a, b) => a.id - b.id);
+      sortedPrizes.sort((a, b) => a.id - b.id);
     }
+    
     setSortOption(option);
   };
+
+  const filteredPrizes = prizes.filter((prize) =>
+    prize.name.toLowerCase().includes(searchInput.toLowerCase())
+  );
 
   return (
     <div className="gallery-container">
@@ -53,8 +60,16 @@ const PrizeGallery: React.FC<PrizeGalleryProps> = ({ prizes, addToCart }) => {
           Oldest
         </span>
       </div>
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search prizes"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+      </div>
       <div className="gallery">
-        {prizes.map((prize) => (
+        {filteredPrizes.map((prize) => (
           <PrizeCard key={prize.id} prize={prize} addToCart={addToCart} />
         ))}
       </div>

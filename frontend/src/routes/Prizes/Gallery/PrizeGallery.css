@@ -1,11 +1,21 @@
-/* Gallery.css */
+/* PrizeGallery.css */
 
 /* Gallery container */
+.gallery-container {
+    max-width: 70%;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    /* Create three columns by default */
+}
+
 .gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    justify-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    /* Create three columns with spacing */
 }
 
 /* Individual item cards */
@@ -16,6 +26,28 @@
     padding: 20px;
     text-align: center;
     transition: transform 0.2s ease;
+    width: calc(33.33% - 20px);
+    /* Three cards per row with some spacing by default */
+    margin-right: 20px;
+    /* Add some spacing between cards */
+    margin-bottom: 20px;
+    position: relative;
+}
+
+/* Prize card layout for medium-sized screens (two cards per row) */
+@media screen and (max-width: 768px) {
+    .prize-card {
+        width: calc(50% - 20px);
+        /* Two cards per row with some spacing */
+    }
+}
+
+/* Prize card layout for small screens (one card per row) */
+@media screen and (max-width: 480px) {
+    .prize-card {
+        width: 100%;
+        /* One card per row with no spacing */
+    }
 }
 
 .prize-card:hover {
@@ -29,6 +61,21 @@
     height: auto;
     margin-bottom: 15px;
     border-radius: 8px;
+}
+
+.out-of-stock-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: black;
+    /* Black background for out of stock */
+    color: white;
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    display: block;
 }
 
 /* Prize name */
@@ -64,9 +111,11 @@
     transition: background-color 0.3s;
 }
 
+/* Disabled button style for out-of-stock items */
 .redeem-button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+    color: #999;
 }
 
 .redeem-button:hover {
@@ -84,7 +133,7 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin: 10px 20px 0 20px;
+    margin: 20px 20px 0 20px;
 }
 
 /* Filter text style */
@@ -117,4 +166,34 @@
 /* Hover state for filter underline */
 .filter:hover::after {
     width: 100%;
+}
+
+/* Search container */
+.search-container {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Search input styles */
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1.2rem;
+}
+
+/* Placeholder text styles */
+input::placeholder {
+    color: #999;
+}
+
+/* Hover state for input */
+input[type="text"]:hover {
+    border-color: #A51431;
+}
+
+/* Active state for input */
+input[type="text"]:focus {
+    border-color: #A51431;
 }

@@ -1,6 +1,7 @@
 // PrizeCard.tsx
 import React from 'react';
 import { Prize } from '../PrizeHome';
+import '../Gallery/PrizeGallery.css';
 
 interface PrizeCardProps {
   prize: Prize;
